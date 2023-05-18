@@ -1,0 +1,183 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Movie Search</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f1f8e9;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-top: 0;
+            padding-top: 20px;
+            color: #4caf50;
+        }
+
+        #movies {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .movie-card {
+            width: 300px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            margin: 10px;
+            padding: 20px;
+        }
+
+        .movie-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .movie-watched {
+            font-size: 16px;
+            color: #555;
+        }
+
+        .genre-buttons {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .genre-button {
+            margin: 0 10px;
+            padding: 5px 10px;
+            background-color: #4caf50;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+            .genre-button:hover {
+                background-color: #45a049;
+            }
+    </style>
+</head>
+<body>
+    <h1>Test Movie Site</h1>
+
+    <div class="genre-buttons">
+        <button class="genre-button" data-genre="All">All</button>
+        <button class="genre-button" data-genre="Action">Action</button>
+        <button class="genre-button" data-genre="Drama">Drama</button>
+        <button class="genre-button" data-genre="Sci-Fi">Sci-Fi</button>
+        <button class="genre-button" data-genre="Musical">Musical</button>
+        <button class="genre-button" data-genre="Horror">Horror</button>
+    </div>
+
+    <div id="movies"></div>
+
+    <script>
+        // Make an HTTP GET request to the API endpoint
+        fetch('https://localhost:7271/movies')
+            .then(response => response.json()) // Parse the response as JSON
+            .then(data => {
+                // Handle the response data
+                const moviesDiv = document.getElementById('movies');
+                const genres = getUniqueGenres(data);
+
+                // Create genre buttons
+                createGenreButtons(genres, moviesDiv, data);
+
+                // Display all movies by default
+                displayMovies(data, moviesDiv);
+
+                // Add event listeners to genre buttons
+                const genreButtons = document.querySelectorAll('.genre-button');
+                genreButtons.forEach(button => {
+                    button.addEventListener('click', () => {
+                        const selectedGenre = button.dataset.genre;
+                        const filteredMovies = filterMoviesByGenre(data, selectedGenre);
+                        displayMovies(filteredMovies, moviesDiv);
+                    });
+                });
+            })
+            .catch(error => {
+                // Handle any errors that occurred during the request
+                console.error('Error:', error);
+            });
+
+        // Get unique genres from the movie data
+        function getUniqueGenres(data) {
+            const genres = data.reduce((uniqueGenres, movie) => {
+                if (!uniqueGenres.includes(movie.genre)) {
+                    uniqueGenres.push(movie.genre);
+                }
+                return uniqueGenres;
+            }, []);
+            return genres;
+        }
+
+        // Create genre buttons
+        function createGenreButtons(genres, container, data) {
+            const buttonsContainer = document.createElement('div');
+            buttonsContainer.className = 'genre-buttons';
+
+            const allButton = document.createElement('button');
+            allButton.className = 'genre-button';
+            allButton.textContent = 'All';
+            allButton.dataset.genre = 'All';
+            buttonsContainer.appendChild(allButton);
+
+            genres.forEach(genre => {
+                const button = document.createElement('button');
+                button.className = 'genre-button';
+                button.textContent = genre;
+                button.dataset.genre = genre;
+                buttonsContainer.appendChild(button);
+            });
+
+            container.prepend(buttonsContainer);
+        }
+
+        // Filter movies by genre
+        function filterMoviesByGenre(data, genre) {
+            if (genre === 'All') {
+                return data;
+            }
+            const filteredMovies = data.filter(movie => movie.genre === genre);
+            return filteredMovies;
+        }
+
+        // Display movies on the webpage
+        function displayMovies(movies, container) {
+            container.innerHTML = '';
+
+            movies.forEach(movie => {
+                // Create a new movie card element
+                const movieCard = document.createElement('div');
+                movieCard.className = 'movie-card';
+
+                // Create title element
+                const titleElement = document.createElement('h2');
+                titleElement.className = 'movie-title';
+                titleElement.textContent = movie.title;
+
+                // Create watched element
+                const watchedElement = document.createElement('p');
+                watchedElement.className = 'movie-watched';
+                watchedElement.textContent = `Watched?: ${movie.watched}`;
+
+                // Append title and watched elements to the movie card
+                movieCard.appendChild(titleElement);
+                movieCard.appendChild(watchedElement);
+
+                // Append movie card to the movies container
+                container.appendChild(movieCard);
+            });
+        }
+    </script>
+</body>
+</html>
